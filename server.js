@@ -15,18 +15,35 @@ app.get('/', (req, res) => {
 // db schema
 const userSchema = new Schema({
   username: { type: String, required: true },
-  exercises: Array,
+  log: Array,
 });
 const User = mongoose.model('User', userSchema);
 // add user
 app.use('/api/users', bodyParser.urlencoded({ extended: false }));
 app.post('/api/users', (req, res) => {
   const { username: user } = req.body;
-  let newUser = new User({ username: user });
-  newUser.save();
-  res.json({ username: user, id: newUser._id });
+  User.findOneAndUpdate(
+    { username: user },
+    { username: user },
+    { new: true, upsert: true },
+    (err, data) => {
+      if (!err) {
+        res.json({ username: data.username, _id: data._id });
+      }
+    }
+  );
+  // res.json({ username: user, _id: newUser._id });
 });
-
+// request list of all users
+app.get('/api/users', (req, res) => {
+  User.find({})
+    .select({ log: 0 })
+    .exec((err, data) => {
+      if (!err) {
+        res.json(data);
+      }
+    });
+});
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port);
 });
