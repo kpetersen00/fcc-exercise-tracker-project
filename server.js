@@ -32,7 +32,6 @@ app.post('/api/users', (req, res) => {
       }
     }
   );
-  // res.json({ username: user, _id: newUser._id });
 });
 // request list of all users
 app.get('/api/users', (req, res) => {
