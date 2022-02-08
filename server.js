@@ -21,10 +21,10 @@ const User = mongoose.model('User', userSchema);
 // add user
 app.use('/api/users', bodyParser.urlencoded({ extended: false }));
 app.post('/api/users', (req, res) => {
-  const { username: user } = req.body;
+  const { username } = req.body;
   User.findOneAndUpdate(
-    { username: user },
-    { username: user },
+    { username: username },
+    { username: username },
     { new: true, upsert: true },
     (err, data) => {
       if (!err) {
@@ -42,6 +42,51 @@ app.get('/api/users', (req, res) => {
         res.json(data);
       }
     });
+});
+// submit exercises
+app.use(
+  '/api/users/:_id/exercises',
+  bodyParser.urlencoded({ extended: false })
+);
+app.post('/api/users/:_id/exercises', (req, res) => {
+  const { uid, description, date, duration } = req.body;
+  let formattedDate;
+  if (date !== '') {
+    formattedDate = new Date(date).toDateString();
+  } else {
+    formattedDate = new Date().toDateString();
+  }
+  User.findByIdAndUpdate(
+    uid,
+    {
+      $push: {
+        log: {
+          description: description,
+          duration: duration,
+          date: formattedDate,
+        },
+      },
+    },
+    (err, data) => {
+      if (!err) {
+        data.log.push({
+          description: description,
+          duration: duration,
+          date: formattedDate,
+        });
+        res.json({
+          username: data.username,
+          description: description,
+          duration: duration,
+          date: formattedDate,
+          _id: uid,
+        });
+      }
+      if (err) {
+        console.log(err);
+      }
+    }
+  );
 });
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port);
